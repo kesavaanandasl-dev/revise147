@@ -1,0 +1,69 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model UserProfile {
+  id            String   @id @default("user")
+  name          String   @default("Aspirant")
+  xp            Int      @default(0)
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  theme         String   @default("dark")
+  updatedAt     DateTime @updatedAt
+}
+
+model Subject {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  createdAt     DateTime       @default(now())
+  topics        Topic[]
+  studySessions StudySession[]
+}
+
+model Topic {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  subjectId   String
+  subject     Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  difficulty  String     // Easy, Medium, Hard
+  status      String     @default("Learning") // Learning, Active, Mastered, Archived
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  revisions   Revision[]
+}
+
+model Revision {
+  id              String    @id @default(cuid())
+  topicId         String
+  topic           Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  revisionNumber  Int
+  scheduledDate   DateTime
+  completedDate   DateTime?
+  status          String    @default("Pending") // Pending, Completed, Missed
+  retentionRating String?   // Forgot, Weak, Good, Perfect
+  createdAt       DateTime  @default(now())
+}
+
+model StudySession {
+  id              String   @id @default(cuid())
+  date            DateTime @default(now())
+  subjectId       String
+  subject         Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  durationMinutes Int
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
+model DailyStreak {
+  id        String   @id @default(cuid())
+  date      DateTime @unique // Represents the day date at 00:00:00
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
